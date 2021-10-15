@@ -22,7 +22,7 @@ The latest version of the Armbian firmware can be downloaded in [Releases](https
 
 Choose the corresponding firmware according to your STB. Then write the IMG file to the USB hard disk through software such as [Rufus](https://rufus.ie/) or [balenaEtcher](https://www.balena.io/etcher/). Insert the USB hard disk into the STB. Common for all `Amlogic S9xxx STB`.
 
-- ### Install Armbian
+- ### Install Armbian to EMMC
 
 Login in to armbian (default user: root, default password: 1234) → input command:
 
@@ -30,7 +30,7 @@ Login in to armbian (default user: root, default password: 1234) → input comma
 armbian-install
 ```
 
-- ### Update Armbian
+- ### Update Armbian Kernel
 
 Query the available [kernel_version](https://github.com/ophub/flippy-kernel/tree/main/library). Login in to armbian → input command:
 
@@ -39,13 +39,29 @@ Query the available [kernel_version](https://github.com/ophub/flippy-kernel/tree
 armbian-update 5.10.66
 ```
 
+- ### Install Docker Service
+
+Login in to armbian → input command:
+
+```yaml
+armbian-docker
+```
+
+- ### Modify Armbian Config
+
+Login in to armbian → input command:
+
+```yaml
+armbian-config
+```
+
 ## Armbian firmware make method
 
 - Different amlogic armbian firmware, use the corresponding soc code to generate. Please choose according to your box soc model. Supported soc are `s922x`, `s905x3`, `s905x2`, `s912`, `s905d`, `s905x`, `s905w`.
 
 - compile `a single soc` can be directly input `sudo ./make s905x3`. When `multiple soc` is compiled at the same time, please use `_` to connect multiple soc, such as `sudo ./make s922x_s905x3`
 
-- Optionality: Replace the kernel. Run Eg: `sudo ./make s905x 5.4.149`. When multiple kernel versions are generated at one time, the kernel version number is connected with `_` . Run Eg: `sudo ./make s922x_s905x3 5.4.149_5.14.6`.  When there is an latest version of the same series of the specified kernel version, the `latest version` will be download from [kernel library](https://github.com/ophub/flippy-kernel/tree/main/library) and used automatically. When you want to compile a `fixed kernel`, Run `sudo ./make s905x 5.4.149 false`.
+- Optionality: Replace the kernel. Run Eg: `sudo ./make s905x 5.4.150`. When multiple kernel versions are generated at one time, the kernel version number is connected with `_` . Run Eg: `sudo ./make s922x_s905x3 5.10.70_5.4.150`.  When there is an latest version of the same series of the specified kernel version, the `latest version` will be download from [kernel library](https://github.com/ophub/flippy-kernel/tree/main/library) and used automatically. When you want to compile a `fixed kernel`, Run `sudo ./make s905x 5.4.150 false`.
 
 💡Tips: The ***`s905x`*** and ***`s905w`*** boxs currently only support `5.4.*` kernels, Cannot use kernel version 5.10 and above. Please add kernel substitution variables when compiling these two models of devices. Other devices can be freely selected.
 
@@ -55,7 +71,7 @@ armbian-update 5.10.66
 
 2. New compilation: Select ***`Build Armbian For Amlogic`*** on the [Action](https://github.com/ophub/amlogic-s9xxx-armbian/actions) page. Click the ***`Run workflow`*** button.
 
-3. Compile again: If there is an `Armbian_.*_Lepotato_.*.img.gz` file in [Releases](https://github.com/ophub/amlogic-s9xxx-armbian/releases), you do not need to compile it completely, you can directly use this file to `build armbian` of different soc. Select ***`Use Releases file to build`*** on the [Action](https://github.com/ophub/amlogic-s9xxx-armbian/actions) page. Click the ***`Run workflow`*** button.
+3. Compile again: If there is an `Armbian_.*-trunk_.*.img.gz` file in [Releases](https://github.com/ophub/amlogic-s9xxx-armbian/releases), you do not need to compile it completely, you can directly use this file to `build armbian` of different soc. Select ***`Use Releases file to build`*** on the [Action](https://github.com/ophub/amlogic-s9xxx-armbian/actions) page. Click the ***`Run workflow`*** button.
 
 - ### Local make instructions
 

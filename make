@@ -120,10 +120,10 @@ make_image() {
         mkdir -p ${tmp_armbian} ${tmp_build} ${tmp_outpath} ${tmp_aml_image} && sync
 
         # Get armbian version and release
-        armbian_image_name=$(ls ${armbian_outputpath}/*_Lepotato_*.img 2>/dev/null | awk -F "/Armbian_" '{print $2}')
+        armbian_image_name=$(ls ${armbian_outputpath}/*-trunk_*.img 2>/dev/null | awk -F "/Armbian_" '{print $2}')
         out_release=$(echo ${armbian_image_name} | awk -F "focal" '{print $1}' | grep -oE '[1-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}' 2>/dev/null)
         out_version=$(echo ${armbian_image_name} | awk -F "focal" '{print $NF}' | grep -oE '[1-9].[0-9]{1,3}.[0-9]{1,3}' 2>/dev/null)
-        [[ -n "${out_release}" && -n "${out_version}" ]] || die "Invalid file: ${armbian_outputpath}/*_Lepotato_*.img"
+        [[ -n "${out_release}" && -n "${out_version}" ]] || die "Invalid file: ${armbian_outputpath}/*-trunk_*.img"
         if [ -n "${new_kernel}" ]; then
             make_version=${new_kernel}
         else
@@ -140,18 +140,19 @@ make_image() {
         ROOT_MB=2304
         IMG_SIZE=$((SKIP_MB + BOOT_MB + ROOT_MB))
 
-        dd if=/dev/zero of=${build_image_file} bs=1M count=${IMG_SIZE} >/dev/null 2>&1
+        dd if=/dev/zero of=${build_image_file} bs=1M count=${IMG_SIZE} conv=fsync >/dev/null 2>&1
+        sync
 
         parted -s ${build_image_file} mklabel msdos 2>/dev/null
         parted -s ${build_image_file} mkpart primary fat32 $((SKIP_MB))M $((SKIP_MB + BOOT_MB -1))M 2>/dev/null
         parted -s ${build_image_file} mkpart primary ext4 $((SKIP_MB + BOOT_MB))M 100% 2>/dev/null
+        sync
 
         loop_new=$(losetup -P -f --show "${build_image_file}")
         [ ${loop_new} ] || die "losetup ${build_image_file} failed."
 
         mkfs.vfat -n "BOOT" ${loop_new}p1 >/dev/null 2>&1
         mke2fs -F -q -t ext4 -L "ROOTFS" -m 0 ${loop_new}p2 >/dev/null 2>&1
-
         sync
 }
 
@@ -160,7 +161,7 @@ extract_armbian() {
 
         armbian_image_file="${tmp_aml_image}/armbian_${build_soc}_${make_version}.img"
         rm -f ${armbian_image_file} 2>/dev/null && sync
-        cp -f $( ls ${armbian_outputpath}/*_Lepotato_*.img 2>/dev/null | head -n 1 ) ${armbian_image_file}
+        cp -f $( ls ${armbian_outputpath}/*-trunk_*.img 2>/dev/null | head -n 1 ) ${armbian_image_file}
         sync && sleep 3
 
         loop_old=$(losetup -P -f --show "${armbian_image_file}")
@@ -296,6 +297,7 @@ copy_files() {
             dd if=${tag_rootfs}/usr${ANDROID_UBOOT} of=${loop_new} bs=512 skip=1 seek=1 conv=fsync 2>/dev/null
             #echo -e "For [ ${build_soc} ] write Android bootloader: ${ANDROID_UBOOT}"
         fi
+        sync
 
         # Reorganize the /boot partition
         mkdir -p ${tmp_build}/boot
@@ -367,6 +369,8 @@ copy_files() {
         ln -sf var/tmp tmp
         ln -sf usr/share/zoneinfo/Asia/Shanghai etc/localtime
         chmod 777 var/tmp
+        chown man:root var/cache/man -R
+        chmod g+s var/cache/man -R
 
         # Delete related files
         rm -f etc/apt/sources.list.save 2>/dev/null
